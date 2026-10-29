@@ -1197,8 +1197,14 @@ function renderLeaderboard(){
   const summary=document.getElementById('leaderboardSummary');
 
   const ranked=[...state.countries]
-    .map(c=>({...c,computedScore:countryScore(c)}))
-    .sort((a,b)=>b.computedScore-a.computedScore||a.name.localeCompare(b.name));
+  .map(c=>({
+    ...c,
+    computedScore: Number(c.score) || 0
+  }))
+  .sort((a,b)=>
+    b.computedScore-a.computedScore ||
+    a.name.localeCompare(b.name)
+  );
 
   const averageCompatibility=ranked.length
     ?Math.round(
