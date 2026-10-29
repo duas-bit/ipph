@@ -49,7 +49,7 @@ h1{font:900 clamp(1.65rem,5.3vw,3.3rem)/1.5 'Press Start 2P',monospace;letter-sp
 h2{font:900 clamp(1rem,3vw,1.65rem)/1.5 'Press Start 2P',monospace;letter-spacing:-.06em;margin:10px 0 12px}
 h3{font:700 1.05rem 'Courier New', monospace;margin-bottom:8px}
 p{line-height:1.6}
-.lede{max-width:650px;font-size:1.08rem;color:var(--brown)}
+.lede{max-width:650px;font-size:0.98rem;color:var(--brown)}
 .hero{display:block;max-width:850px;padding:46px 0 34px}
 .hero h1 .scribble{display:inline-block;position:relative;z-index:0}
 .menu-grid{
@@ -154,7 +154,14 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
   .panel{padding:16px}
   .option-row{grid-template-columns:1fr}
   .option-row .btn-row{margin-top:10px}
-  .topbar{align-items:flex-start}
+  .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 28px 0 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
   .top-tag{font-size:.62rem}
 }
   .topbar{
@@ -195,27 +202,28 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
   }
 }
   /* Main menu buttons only */
-.view#homeView .menu-card{
-  min-height:130px;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:24px 56px;
+.view#homeView .menu-card {
+  position: relative;
+  min-height: 130px;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px 56px 24px 22px;
 }
 
-.view#homeView .menu-card .num{
-  position:absolute;
-  top:18px;
-  left:22px;
+.view#homeView .menu-card .num {
+  position: absolute;
+  top: 18px;
+  left: 22px;
 }
 
-.view#homeView .menu-card .card-title{
-  margin:0;
-  text-align:center;
+.view#homeView .menu-card .card-title {
+  margin: 0;
+  text-align: left;
 }
 
-.view#homeView .menu-card .card-desc{
-  display:none;
+.view#homeView .menu-card .card-desc {
+  display: none;
 }
 
 /* Hardcore Mode badge in the header */
@@ -247,7 +255,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     <section class="view active" id="homeView">
       <div class="hero">
         <div>
-          <div class="eyebrow">✦ Who will be my Islamically Permissable Potential Husband?</div>
+          <div class="eyebrow">✦ Who will be my Islamically Permissable Potential Husband? ✦</div>
           <h1>Find out<br>how you rank.</h1>
           <p class="lede">This is the only time I'm allowed to be selfish in life, so enter the roster and see how you fare against my standards.</p>
         </div>
@@ -272,13 +280,21 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
             <p class="card-desc"></p>
           </div>
         </button>
-      
       </div>
+      
+      <footer>
+        <a
+          class="footer-admin-link"
+          href="#developerSettingsView"
+          onclick="event.preventDefault(); showView('developerSettingsView')"
+          >Click here if your name is Dua and you want to humble your contenders →</a>
+      </footer>
     </section>
+
 <section class="view" id="developerSettingsView">
 
   <div class="backline">
-    <button class="link-btn" onclick="showView('homeView')">← Home</button>
+    <button class="link-btn" onclick="showView('homeView')">← Main Menu</button>
     <span class="badge">03 / SETTINGS</span>
   </div>
 
@@ -288,7 +304,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
       <span class="num">01 / MY RULES</span>
       <span class="arrow">↗</span>
       <div>
-        <div class="card-title">Adjust Ideal Preference</div>
+        <div class="card-title">Adjust Ideal Preferences</div>
         <p class="card-desc">Create standards, customize labels, and set my ideal answers.</p>
       </div>
     </button>
@@ -297,7 +313,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
       <span class="num">02 / MY CONTENDERS</span>
       <span class="arrow">↗</span>
       <div>
-        <div class="card-title">Edit an Option</div>
+        <div class="card-title">Edit a Contender</div>
         <p class="card-desc">Search, edit, or delete contenders I have already saved.</p>
       </div>
     </button>
@@ -306,7 +322,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 
 </section>
     <section class="view" id="preferencesView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Home</button><span class="badge">03 / SET THE RULES</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">03 / SET THE RULES</span></div>
       <div class="section-head"><div><div class="eyebrow">Your personal rubric</div><h2>Define your ideal.</h2><p>Every standard has five custom labels. The point you mark as ideal is worth 100% compatibility; the other points score by distance from it.</p></div></div>
       <div class="notice" style="margin-bottom:18px">Your ideal point can be any of the five positions. For example, “little-to-no ego” could be your ideal at point 1, while “excellent hygiene” could be your ideal at point 5.</div>
       <div id="standardsEditor"></div>
@@ -314,7 +330,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     </section>
 
     <section class="view" id="optionView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Home</button><span class="badge" id="optionModeBadge">01 / ADD TO THE ROSTER</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge" id="optionModeBadge">01 / ADD TO THE ROSTER</span></div>
       <div class="section-head"><div><div class="eyebrow">Country evaluation</div><h2 id="optionHeading">Meet a contender.</h2><p>Choose one answer for every standard. You can change any answer later.</p></div></div>
       <div class="panel">
         <div class="form-grid">
@@ -328,14 +344,14 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     </section>
 
     <section class="view" id="editListView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Home</button><span class="badge">02 / UPDATE YOUR PICKS</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">02 / UPDATE YOUR PICKS</span></div>
       <div class="section-head"><div><div class="eyebrow">Your saved countries</div><h2>Edit a contender.</h2><p>Choose a country to update its details or ratings. This list is separate from the new-country form.</p></div></div>
       <div class="field"><label for="editSearch">Find a country</label><input id="editSearch" placeholder="Search saved countries…" oninput="renderEditList()"></div>
       <div id="editOptionsList"></div>
     </section>
 
     <section class="view" id="leaderboardView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Home</button><span class="badge">04 / SEE WHO WINS</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">04 / SEE WHO WINS</span></div>
       <div class="section-head"><div><div class="eyebrow">The current standings</div><h2>Country leaderboard.</h2><p>Ranked by compatibility with your current ideal preferences. Open any contender for the full breakdown.</p></div><button class="btn secondary small" onclick="exportData()">Export backup ↓</button></div>
       <div class="panel soft" id="leaderboardSummary"></div>
       <div class="panel"><div id="leaderboardList"></div></div>
@@ -344,14 +360,6 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
       <div class="notice" style="margin-top:18px">Prototype storage note: this first build saves to this browser only. Use Export backup to keep a copy. Google Sheets syncing and secure private access are the next setup stage; a public GitHub Pages page alone cannot securely hide a leaderboard.</div>
     </section>
   </main>
-
-  <footer>
-    <a
-      class="footer-admin-link"
-      href="#developerSettingsView"
-      onclick="event.preventDefault(); showView('developerSettingsView')"
-    >Click here if your name is Dua and you want to humble your contenders ↗</a>
-  </footer>
 
 </div>
 
