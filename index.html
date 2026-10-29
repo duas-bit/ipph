@@ -318,7 +318,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
           class="footer-admin-link"
           href="#developerSettingsView"
           onclick="event.preventDefault(); showView('developerSettingsView')"
-          >Click here if your name is Dua and you want to humble your contenders →</a>
+          >Only click here if your name is Dua and you want to humble your contenders ↗</a>
       </footer>
     </section>
 
@@ -409,6 +409,75 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 
 <script>
 const STORAGE_KEY = 'whereToCountryQuest_v1';
+  
+const IPPH_PUBLIC_API =
+  'https://script.google.com/macros/s/AKfycbzdffX2XO4mCEaUzaf2BjeiOSGM0FngPhAqaLSZ8vVhLjgRWpahSu-p2keLzQQ1W3aq/exec';
+
+const IPPH_SUBMISSION_URL =
+  'https://script.google.com/macros/s/AKfycbza-2fJaVE356QnocQnjVQCYfu4MIB0-4rxmy3giw6L4akG41YXCbiezkz9yhku0NsBbA/exec';
+
+function ipphFetchPublicData() {
+  return new Promise(function(resolve, reject) {
+    const callbackName =
+      'ipphPublicCallback_' + Date.now() + '_' +
+      Math.random().toString(36).slice(2);
+
+    const script = document.createElement('script');
+    let finished = false;
+
+    function cleanup() {
+      delete window[callbackName];
+      script.remove();
+    }
+
+    const timeout = setTimeout(function() {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error('Public data request timed out.'));
+    }, 15000);
+
+    window[callbackName] = function(data) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      cleanup();
+
+      if (!data || data.ok !== true) {
+        reject(new Error(
+          data && data.error
+            ? data.error
+            : 'Public data could not be loaded.'
+        ));
+        return;
+      }
+
+      if (
+        !Array.isArray(data.standards) ||
+        !Array.isArray(data.leaderboard)
+      ) {
+        reject(new Error('The public data response is incomplete.'));
+        return;
+      }
+
+      resolve(data);
+    };
+
+    script.onerror = function() {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      cleanup();
+      reject(new Error('Could not connect to the public data service.'));
+    };
+
+    script.src = IPPH_PUBLIC_API +
+      '?callback=' + encodeURIComponent(callbackName) +
+      '&_=' + Date.now();
+
+    document.head.appendChild(script);
+  });
+}
 
 const defaultState = {
   standards: [
@@ -1160,7 +1229,7 @@ function showHistory(id){
           </div>
         `).join('')}
       </div>`
-    :'<div class="notice" style="margin-top:12px">No previous revisions have been saved for this country yet. History is created when you edit or delete a country, or when its score changes after a rubric update.</div>';
+    :'<div class="notice" style="margin-top:12px">No previous revisions have been saved for this contender yet. History is created when you edit or delete a contender, or when its score changes after a rubric update.</div>';
 }
 
 function exportData(){
