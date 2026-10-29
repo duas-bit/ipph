@@ -332,7 +332,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
   <div class="menu-grid">
 
     <button class="menu-card" onclick="showView('preferencesView')">
-      <span class="num">01 / MY RULES</span>
+      <span class="num">03 / MY RULES</span>
       <span class="arrow">↗</span>
       <div>
         <div class="card-title">Adjust Ideal Preferences</div>
@@ -341,7 +341,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     </button>
 
     <button class="menu-card" onclick="showEditOptions()">
-      <span class="num">02 / MY CONTENDERS</span>
+      <span class="num">03 / MY CONTENDERS</span>
       <span class="arrow">↗</span>
       <div>
         <div class="card-title">Edit a Contender</div>
@@ -353,7 +353,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 
 </section>
     <section class="view" id="preferencesView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">03 / SET THE RULES</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">03 / MY RULES</span></div>
       <div class="section-head"><div><div class="eyebrow">Your personal rubric</div><h2>Define your ideal.</h2><p>Every standard has five custom labels. The point you mark as ideal is worth 100% compatibility; the other points score by distance from it.</p></div></div>
       <div class="notice" style="margin-bottom:18px">Your ideal point can be any of the five positions. For example, “little-to-no ego” could be your ideal at point 1, while “excellent hygiene” could be your ideal at point 5.</div>
       <div id="standardsEditor"></div>
@@ -362,22 +362,22 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 
     <section class="view" id="optionView">
       <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge" id="optionModeBadge">01 / ADD TO THE ROSTER</span></div>
-      <div class="section-head"><div><div class="eyebrow">Country evaluation</div><h2 id="optionHeading">Meet a contender.</h2><p>Choose one answer for every standard. You can change any answer later.</p></div></div>
+      <div class="section-head"><div><div class="eyebrow">Welcome to the Game</div><h2 id="optionHeading">Become a contender.</h2><p>Choose one answer for every question. Answer truthfully.</p></div></div>
       <div class="panel">
         <div class="form-grid">
-          <div class="field"><label for="countryName">Country name</label><input id="countryName" placeholder="e.g. Portugal" maxlength="90"></div>
-          <div class="field"><label for="countryTagline">Quick note (optional)</label><input id="countryTagline" placeholder="e.g. Coastal living, mild winters" maxlength="180"></div>
+          <div class="field"><label for="countryName">Your Name</label><input id="countryName" placeholder="e.g. Chlodwig" maxlength="90"></div>
+          <div class="field"><label for="countryTagline">Your Biggest Green Flag</label><input id="countryTagline" placeholder="i.e. has a routine bedtime" maxlength="180"></div>
         </div>
       </div>
       <div id="countryQuestions"></div>
       <div class="score-banner"><div><div class="score-label">Projected compatibility</div><div class="score-number" id="liveScore">—%</div></div><div><div id="scoreCaption">Answer every standard to calculate your score.</div><div class="score-meter"><span id="scoreMeterFill"></span></div><div class="range-captions"><span>0% · Not aligned</span><span>100% · Your ideal</span></div></div></div>
-      <div class="btn-row"><button class="btn" onclick="saveOption()">Save country + score ↗</button><button class="btn secondary" onclick="showView('homeView')">Cancel</button></div>
+      <div class="btn-row"><button class="btn" id="saveOptionButton" onclick="saveOption()">Enter The Game ↗</button><button class="btn secondary" onclick="showView('homeView')">I Lied, I'm Not Worthy</button></div>
     </section>
 
     <section class="view" id="editListView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">02 / UPDATE YOUR PICKS</span></div>
-      <div class="section-head"><div><div class="eyebrow">Your saved countries</div><h2>Edit a contender.</h2><p>Choose a country to update its details or ratings. This list is separate from the new-country form.</p></div></div>
-      <div class="field"><label for="editSearch">Find a country</label><input id="editSearch" placeholder="Search saved countries…" oninput="renderEditList()"></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">03 / MY CONTENDERS</span></div>
+      <div class="section-head"><div><div class="eyebrow">My Current Roster</div><h2>Edit a contender.</h2><p>Choose a contender to update their details. This list is separate from the new-contender form.</p></div></div>
+      <div class="field"><label for="editSearch">Find a contender</label><input id="editSearch" placeholder="Search the roster…" oninput="renderEditList()"></div>
       <div id="editOptionsList"></div>
     </section>
 
@@ -716,7 +716,8 @@ function startNewOption(){
   document.getElementById('countryName').value='';
   document.getElementById('countryTagline').value='';
   document.getElementById('optionModeBadge').textContent='01 / ADD TO THE ROSTER';
-  document.getElementById('optionHeading').textContent='Meet a contender.';
+  document.getElementById('optionHeading').textContent='Become a contender.';
+  document.getElementById('saveOptionButton').textContent='Enter The Game ↗';
 
   renderCountryQuestions();
   updateLiveScore();
@@ -733,8 +734,9 @@ function startEditOption(id){
 
   document.getElementById('countryName').value=c.name;
   document.getElementById('countryTagline').value=c.tagline||'';
-  document.getElementById('optionModeBadge').textContent='02 / EDIT A SAVED COUNTRY';
-  document.getElementById('optionHeading').textContent='Update your contender.';
+  document.getElementById('optionModeBadge').textContent='03 / MY CONTENDERS';
+  document.getElementById('optionHeading').textContent='Edit a contender.';
+  document.getElementById('saveOptionButton').textContent='Save changes ↗';
 
   renderCountryQuestions();
   updateLiveScore();
@@ -742,10 +744,16 @@ function startEditOption(id){
 }
 
 
+
 function renderCountryQuestions(){
   const host=document.getElementById('countryQuestions');
+  const showScoringDetails=currentMode==='edit';
 
   host.innerHTML=state.standards.map((s,i)=>{
+    const idealLabel=s.type==='binary'
+      ?(s.labels[Number(s.ideal)===1?1:0]||(Number(s.ideal)===1?'Yes':'No'))
+      :`P${s.ideal}`;
+
     return `
       <div class="standard-card">
         <div class="standard-top">
@@ -753,14 +761,19 @@ function renderCountryQuestions(){
             <div class="standard-number">STANDARD ${String(i+1).padStart(2,'0')}</div>
             <div class="standard-name">${escapeHtml(s.name)}</div>
           </div>
-          <div class="ideal-pick">${s.type==='binary'?'IDEAL: '+(Number(s.ideal)===1?'YES':'NO'):'IDEAL: P'+s.ideal}</div>
+
+          ${showScoringDetails
+            ?`<div class="ideal-pick">IDEAL: ${escapeHtml(idealLabel)}</div>`
+            :''}
         </div>
 
-        ${s.question?`<div class="standard-question">${escapeHtml(s.question)}</div>`:''}
+        ${s.question
+          ?`<div class="standard-question">${escapeHtml(s.question)}</div>`
+          :''}
 
         <div class="points">
           ${s.type==='binary'
-            ? [1,0].map(value=>{
+            ?[1,0].map(value=>{
                 const label=s.labels[value===1?1:0]||(value===1?'Yes':'No');
                 const selected=draftRatings[s.id]!==undefined &&
                   Number(draftRatings[s.id])===value;
@@ -768,29 +781,36 @@ function renderCountryQuestions(){
 
                 return `
                   <button
-                    type="button"
-                    class="point ${selected?'selected':''} ${Number(s.ideal)===value?'ideal':''}"
+                    class="point ${selected?'selected':''} ${showScoringDetails&&Number(s.ideal)===value?'ideal':''}"
                     onclick="setRating('${s.id}',${value})"
                   >
-                    <span class="n">${pct}% fulfillment</span>
+                    ${showScoringDetails
+                      ?`<span class="n">${pct}% fulfillment</span>`
+                      :''}
                     <span>${escapeHtml(label)}</span>
-                    ${Number(s.ideal)===value?'<span class="ideal-tag">★ IDEAL</span>':''}
+                    ${showScoringDetails&&Number(s.ideal)===value
+                      ?'<span class="ideal-tag">★ IDEAL</span>'
+                      :''}
                   </button>
                 `;
               }).join('')
-            : s.labels.map((label,j)=>{
+            :s.labels.map((label,j)=>{
                 const value=j+1;
                 const selected=Number(draftRatings[s.id]||0)===value;
+                const pct=scoreFor(value,s.ideal);
 
                 return `
                   <button
-                    type="button"
-                    class="point ${selected?'selected':''} ${Number(s.ideal)===value?'ideal':''}"
+                    class="point ${selected?'selected':''} ${showScoringDetails&&Number(s.ideal)===value?'ideal':''}"
                     onclick="setRating('${s.id}',${value})"
                   >
-                    <span class="n">${value} · ${scoreFor(value,s.ideal)}%</span>
+                    ${showScoringDetails
+                      ?`<span class="n">${value} · ${pct}%</span>`
+                      :''}
                     <span>${escapeHtml(label)}</span>
-                    ${Number(s.ideal)===value?'<span class="ideal-tag">★ YOUR IDEAL</span>':''}
+                    ${showScoringDetails&&Number(s.ideal)===value
+                      ?'<span class="ideal-tag">★ YOUR IDEAL</span>'
+                      :''}
                   </button>
                 `;
               }).join('')
@@ -798,8 +818,8 @@ function renderCountryQuestions(){
         </div>
       </div>
     `;
-  }).join('');
-
+  }).join('') ||
+  '<div class="empty"><div class="emoji">🧭</div><h3>No standards yet</h3>Add your first standard to start building your ideal.</div>';
 }
 
 function setRating(id,value){
@@ -809,32 +829,49 @@ function setRating(id,value){
 }
 
 function updateLiveScore(){
+  const scoreBanner=document.querySelector('#optionView .score-banner');
+
+  if(scoreBanner){
+    scoreBanner.style.display=currentMode==='new'?'none':'';
+  }
+
   const total=state.standards.length;
+
   const answered=state.standards.filter(s=>
-  draftRatings[s.id]!==undefined &&
-  draftRatings[s.id]!==null &&
-  draftRatings[s.id]!==''
-).length;
+    draftRatings[s.id]!==undefined &&
+    draftRatings[s.id]!==null &&
+    draftRatings[s.id]!==''
+  ).length;
 
   let sum=0;
   let weightSum=0;
 
   state.standards.forEach(s=>{
     const weight=Number(s.weight)||1;
+
     if(
       draftRatings[s.id]!==undefined &&
       draftRatings[s.id]!==null &&
       draftRatings[s.id]!==''
     ){
-      sum+=scoreFor(draftRatings[s.id],s.ideal,s.type||'scale')*weight;
+      sum+=scoreFor(
+        draftRatings[s.id],
+        s.ideal,
+        s.type||'scale'
+      )*weight;
+
       weightSum+=weight;
     }
   });
 
   const score=weightSum?Math.round(sum/weightSum):0;
 
-  document.getElementById('liveScore').textContent=answered===total?score+'%':(total?score+'%':'—%');
-  document.getElementById('scoreMeterFill').style.width=(answered===total?score:0)+'%';
+  document.getElementById('liveScore').textContent=
+    answered===total?score+'%':(total?score+'%':'—%');
+
+  document.getElementById('scoreMeterFill').style.width=
+    (answered===total?score:0)+'%';
+
   document.getElementById('scoreCaption').textContent=answered===total
     ?'All standards rated · '+answered+'/'+total+' complete'
     :`${answered} of ${total} standards rated — choose an answer for each one.`;
