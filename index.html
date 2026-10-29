@@ -366,7 +366,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
       <div class="panel">
         <div class="form-grid">
           <div class="field"><label for="countryName">Your Name</label><input id="countryName" placeholder="i.e. Chlodwig" maxlength="90"></div>
-          <div class="field"><label for="countryTagline">Your Biggest Green Flag</label><input id="countryTagline" placeholder="i.e. has a routine bedtime" maxlength="180"></div>
+          <div class="field"><label for="countryTagline">Your Biggest Green Flag</label><input id="countryTagline" placeholder="i.e. has a skincare routine" maxlength="180"></div>
         </div>
       </div>
       <div id="countryQuestions"></div>
@@ -995,14 +995,17 @@ function renderEditList(){
         <div>
           <h3>${escapeHtml(c.name)} <span class="badge">${countryScore(c)}% match</span></h3>
           <p>${escapeHtml(c.tagline||'No note added')} · Updated ${new Date(c.updatedAt||c.createdAt).toLocaleDateString()}</p>
+          <div id="history-${c.id}"></div>
         </div>
+
         <div class="btn-row" style="margin:0">
           <button class="btn small" onclick="startEditOption('${c.id}')">Edit ↗</button>
+          <button class="btn ghost small" onclick="showHistory('${c.id}')">View History</button>
           <button class="btn danger small" onclick="deleteCountry('${c.id}')">Delete</button>
         </div>
       </div>
     `).join('')}</div>`
-    :'<div class="empty"><div class="emoji">🗺️</div><h3>No saved countries yet</h3>Weigh your first option to add it to your map.</div>';
+    :'<div class="empty"><div class="emoji">👤</div><h3>No saved contenders yet</h3>Create the first contender to add it to your roster.</div>';
 }
 
 function deleteCountry(id){
