@@ -478,6 +478,92 @@ function ipphFetchPublicData() {
     document.head.appendChild(script);
   });
 }
+  
+function ipphSubmitPublicContender(data) {
+  return new Promise(function(resolve, reject) {
+    const frameName =
+      'ipphSubmitFrame_' + Date.now() + '_' +
+      Math.random().toString(36).slice(2);
+
+    const iframe = document.createElement('iframe');
+    iframe.name = frameName;
+    iframe.style.display = 'none';
+    iframe.setAttribute('aria-hidden', 'true');
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = IPPH_SUBMISSION_URL;
+    form.target = frameName;
+    form.style.display = 'none';
+
+    const payload = document.createElement('input');
+    payload.type = 'hidden';
+    payload.name = 'payload';
+    payload.value = JSON.stringify(data);
+
+    form.appendChild(payload);
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+
+    let finished = false;
+
+    function cleanup() {
+      window.removeEventListener('message', onMessage);
+      form.remove();
+      iframe.remove();
+    }
+
+    const timeout = setTimeout(function() {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error(
+        'The submission timed out. Check the leaderboard before trying again.'
+      ));
+    }, 45000);
+
+    function onMessage(event) {
+      if (event.source !== iframe.contentWindow) return;
+
+      const message = event.data;
+
+      if (
+        !message ||
+        message.type !== 'IPPH_SUBMISSION_RESULT' ||
+        !message.result
+      ) {
+        return;
+      }
+
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      cleanup();
+
+      if (message.result.ok === true) {
+        resolve(message.result);
+      } else {
+        reject(new Error(
+          message.result.error || 'The submission could not be saved.'
+        ));
+      }
+    }
+
+    window.addEventListener('message', onMessage);
+
+    try {
+      form.submit();
+    } catch (error) {
+      if (!finished) {
+        finished = true;
+        clearTimeout(timeout);
+        cleanup();
+        reject(new Error('Could not send the submission.'));
+      }
+    }
+  });
+}
+
 
 const defaultState = {
   standards: [
@@ -969,79 +1055,107 @@ function snapshotStandards(){
   }));
 }
 
-function saveOption(){
-  const name=document.getElementById('countryName').value.trim();
 
-  if(!name){
+async function saveOption() {
+  if (currentMode === 'edit') {
+    showToast('Editing contenders is restricted to the private admin.');
+    return;
+  }
+
+  const name = document.getElementById('countryName').value.trim();
+  const tagline = document.getElementById('countryTagline').value.trim();
+
+  if (!name) {
     showToast('Give this country a name first.');
     document.getElementById('countryName').focus();
     return;
   }
 
-  const missing=state.standards.filter(s=>
-  draftRatings[s.id]===undefined ||
-  draftRatings[s.id]===null ||
-  draftRatings[s.id]===''
-);
-  if(missing.length){
-    showToast(`Rate all ${missing.length} remaining standard(s) first.`);
+  if (name.length > 90) {
+    showToast('Country names must be 90 characters or fewer.');
     return;
   }
 
-  if(currentMode==='new'&&state.countries.some(c=>c.name.toLowerCase()===name.toLowerCase())){
-    showToast('That country already exists. Use Edit an Option instead.');
+  if (!tagline) {
+    showToast('Give this country a tagline first.');
+    document.getElementById('countryTagline').focus();
     return;
   }
 
-  if(currentMode==='edit'&&state.countries.some(c=>c.id!==editingId&&c.name.toLowerCase()===name.toLowerCase())){
-    showToast('Another saved country already has that name.');
+  if (tagline.length > 180) {
+    showToast('Taglines must be 180 characters or fewer.');
     return;
   }
 
-  const now=new Date().toISOString();
-  const tagline=document.getElementById('countryTagline').value.trim();
-  const ratings={};
+  const missing = state.standards.filter(function(s) {
+    return (
+      draftRatings[s.id] === undefined ||
+      draftRatings[s.id] === null ||
+      draftRatings[s.id] === ''
+    );
+  });
 
-  state.standards.forEach(s=>ratings[s.id]=Number(draftRatings[s.id]));
+  if (missing.length) {
+    showToast(
+      `Rate all ${missing.length} remaining standard(s) first.`
+    );
+    return;
+  }
 
-  const score=countryScore({ratings});
+  if (
+    state.countries.some(function(c) {
+      return c.name.toLowerCase() === name.toLowerCase();
+    })
+  ) {
+    showToast('That country already exists. Choose a different name.');
+    return;
+  }
 
-  if(currentMode==='edit'){
-    const c=state.countries.find(x=>x.id===editingId);
-    if(!c)return;
+  const ratings = {};
 
-    state.history.push({
-      countryId:c.id,
-      countryName:c.name,
-      score:c.score,
-      ratings:structuredClone(c.ratings),
-      standards:structuredClone(c.lastStandards||snapshotStandards()),
-      savedAt:c.updatedAt||c.createdAt,
-      reason:'Before edit'
+  state.standards.forEach(function(s) {
+    ratings[s.id] = Number(draftRatings[s.id]);
+  });
+
+  const submitButton = document.querySelector(
+    '#optionView button[onclick*="saveOption"]'
+  );
+
+  if (submitButton) {
+    submitButton.disabled = true;
+  }
+
+  showToast('Submitting your contender…');
+
+  try {
+    const result = await ipphSubmitPublicContender({
+      name: name,
+      tagline: tagline,
+      ratings: ratings
     });
 
-    c.name=name;
-    c.tagline=tagline;
-    c.ratings=ratings;
-    c.score=score;
-    c.updatedAt=now;
-    c.lastStandards=snapshotStandards();
-  }else{
-    state.countries.push({
-      id:uid('country'),
-      name,
-      tagline,
-      ratings,
-      score,
-      createdAt:now,
-      updatedAt:now,
-      lastStandards:snapshotStandards()
-    });
-  }
+    // Refresh shared data after the server confirms the save.
+    await ipphLoadSharedGameData();
 
-  persist();
-  showToast(currentMode==='edit'?'Country updated. Previous score saved to history.':'Country saved to your contenders!');
-  showLeaderboard();
+    showToast(
+      result.message || 'Contender submitted successfully!'
+    );
+
+    showLeaderboard();
+
+  } catch (error) {
+    console.error('IPPH submission failed:', error);
+
+    showToast(
+      error.message ||
+      'Submission failed. Please try again.'
+    );
+
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+    }
+  }
 }
 
 function showEditOptions(){
