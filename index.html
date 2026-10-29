@@ -243,12 +243,14 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 }
 /* FINAL SPACING FIXES */
 
-/* Header: breathing room above and a divider underneath */
+/* Header: breathing room above and a subtle divider underneath */
 .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   margin-top: 28px !important;
   margin-bottom: 28px !important;
-  padding-top: 12px !important;
-  padding-bottom: 18px !important;
+  padding: 18px 0 !important;
   border-bottom: 1px solid var(--line) !important;
 }
 
@@ -262,12 +264,13 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
 </head>
 <body>
 <div class="shell">
+
+  <header class="topbar">
     <div class="brand">
       <span>IPPH</span>
       <span class="badge hardcore-mode">🖤 HARDCORE MODE</span>
     </div>
-    </header>
-
+  </header>
   <main>
     <section class="view active" id="homeView">
       <div class="hero">
