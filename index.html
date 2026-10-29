@@ -270,8 +270,14 @@ function showView(id){
   if(id==='editListView')renderEditList();
 }
 
-function scoreFor(rating,ideal){
-  return Math.round((1-Math.abs(Number(rating)-Number(ideal))/4)*100);
+function scoreFor(rating,ideal,type='scale'){
+  if(type==='binary'){
+    return Number(rating)===Number(ideal)?100:0;
+  }
+
+  return Math.round(
+    (1-Math.abs(Number(rating)-Number(ideal))/4)*100
+  );
 }
 
 function countryScore(country){
@@ -283,7 +289,7 @@ function countryScore(country){
     const w=Number(s.weight)||1;
     const rating=country.ratings?.[s.id];
     if(rating===undefined || rating===null || rating==='')return;
-    sum+=scoreFor(rating,s.ideal)*w;
+    sum+=scoreFor(rating,s.ideal,s.type||'scale')*w;
     weightSum+=w;
   });
 
@@ -304,6 +310,16 @@ function renderStandardsEditor(){
       </div>
 
       <div class="form-grid" style="margin-top:16px">
+      <div class="field">
+        <label>Standard type</label>
+        <select data-field="type">
+          <option value="scale" ${(s.type||'scale')==='scale'?'selected':''}>5-point scale</option>
+          <option value="binary" ${s.type==='binary'?'selected':''}>Yes / No — non-negotiable</option>
+        </select>
+        <small>Use a scale for preferences and Yes / No for requirements that must be met.</small>
+      </div>
+      
+      <div class="form-grid">
         <div class="field">
           <label>Standard name</label>
           <input data-field="name" value="${escapeHtml(s.name)}" placeholder="e.g. Cost of living">
@@ -319,21 +335,37 @@ function renderStandardsEditor(){
         <small>Point 1 is always on the left; point 5 is always on the right. Give every point its own meaning.</small>
       </div>
 
-      ${s.labels.map((label,j)=>`
+      ${(s.type==='binary'?['No','Yes']:s.labels).map((label,j)=>`
         <div class="editor-point">
-          <div class="point-index">P${j+1}${s.ideal===j+1?' ★':''}</div>
-          <input data-label-index="${j}" value="${escapeHtml(label)}" aria-label="Label for point ${j+1}">
+          <div class="point-index">${s.type==='binary'?(j===0?'NO':'YES'):'P'+(j+1)}</div>
+          <input
+            data-label-index="${j}"
+            value="${escapeHtml(label)}"
+            aria-label="${s.type==='binary'?(j===0?'No label':'Yes label'):'Label for point '+(j+1)}"
+          >
         </div>
       `).join('')}
 
       <div class="form-grid" style="margin-top:12px">
-        <div class="field">
-          <label>Which point is your ideal?</label>
-          <select data-field="ideal">
-            ${s.labels.map((label,j)=>`<option value="${j+1}" ${s.ideal===j+1?'selected':''}>Point ${j+1} — ${escapeHtml(label)}${s.ideal===j+1?' (100% ideal)':''}</option>`).join('')}
-          </select>
-          <small>Your selected ideal point always scores 100% compatibility.</small>
-        </div>
+      <div class="field">
+        <label>${s.type==='binary'?'Which answer fulfills this requirement?':'Which point is your ideal?'}</label>
+        <select data-field="ideal">
+          ${s.type==='binary'
+            ? `
+              <option value="1" ${Number(s.ideal)===1?'selected':''}>Yes — 100% fulfillment</option>
+              <option value="0" ${Number(s.ideal)===0?'selected':''}>No — 100% fulfillment</option>
+            `
+            : s.labels.map((label,j)=>`
+              <option value="${j+1}" ${Number(s.ideal)===j+1?'selected':''}>
+                Point ${j+1} — ${escapeHtml(label)}${Number(s.ideal)===j+1?' (100% ideal)':''}
+              </option>
+            `).join('')
+          }
+        </select>
+        <small>${s.type==='binary'
+          ?'The matching answer earns 100%; the opposite answer earns 0%.'
+          :'Your selected ideal point always scores 100% compatibility.'}</small>
+      </div>
 
         <div class="field">
           <label>Importance weight</label>
@@ -361,8 +393,25 @@ function renderStandardsEditor(){
       if(!s)return;
 
       const key=input.dataset.field;
+      
+      if(key==='type'){
+        s.type=input.value;
+      
+        if(s.type==='binary'){
+          s.labels=['No','Yes'];
+          s.ideal=1;
+        }else{
+          s.labels=['Point 1','Point 2','Point 3','Point 4','Point 5'];
+          s.ideal=3;
+        }
+      
+        persist();
+        renderStandardsEditor();
+        return;
+      }
+      
       s[key]=key==='ideal'||key==='weight'?Number(input.value):input.value;
-
+      
       if(key==='ideal')renderStandardsEditor();
       else persist();
     }));
@@ -372,8 +421,14 @@ function renderStandardsEditor(){
       if(!s)return;
 
       const index=Number(input.dataset.labelIndex);
-      s.labels[index]=input.value.trim()||`Point ${index+1}`;
-
+      
+      if(s.type==='binary'){
+        s.labels=['No','Yes'];
+        s.labels[index]=input.value.trim()||(index===0?'No':'Yes');
+      }else{
+        s.labels[index]=input.value.trim()||`Point ${index+1}`;
+      }
+      
       persist();
       renderStandardsEditor();
     }));
@@ -496,19 +551,43 @@ function renderCountryQuestions(){
 
         ${s.question?`<div class="standard-question">${escapeHtml(s.question)}</div>`:''}
 
-        <div class="points">
-          ${s.labels.map((label,j)=>`
-            <button class="point ${selected===j+1?'selected':''} ${s.ideal===j+1?'ideal':''}" onclick="setRating('${s.id}',${j+1})">
-              <span class="n">${j+1} · ${scoreFor(j+1,s.ideal)}%</span>
-              <span>${escapeHtml(label)}</span>
-              ${s.ideal===j+1?'<span class="ideal-tag">★ YOUR IDEAL</span>':''}
-            </button>
-          `).join('')}
-        </div>
+      <div class="points">
+        ${s.type==='binary'
+          ? [1,0].map(value=>{
+              const label=s.labels[value===1?1:0]||(value===1?'Yes':'No');
+              const selected=draftRatings[s.id]!==undefined &&
+                Number(draftRatings[s.id])===value;
+              const pct=scoreFor(value,s.ideal,'binary');
+      
+              return `
+                <button
+                  class="point ${selected?'selected':''} ${Number(s.ideal)===value?'ideal':''}"
+                  onclick="setRating('${s.id}',${value})"
+                >
+                  <span class="n">${pct}% fulfillment</span>
+                  <span>${escapeHtml(label)}</span>
+                  ${Number(s.ideal)===value?'<span class="ideal-tag">★ IDEAL</span>':''}
+                </button>
+              `;
+            }).join('')
+          : s.labels.map((label,j)=>{
+              const value=j+1;
+              const selected=Number(draftRatings[s.id]||0)===value;
+      
+              return `
+                <button
+                  class="point ${selected?'selected':''} ${s.ideal===value?'ideal':''}"
+                  onclick="setRating('${s.id}',${value})"
+                >
+                  <span class="n">${value} · ${scoreFor(value,s.ideal)}%</span>
+                  <span>${escapeHtml(label)}</span>
+                  ${s.ideal===value?'<span class="ideal-tag">★ YOUR IDEAL</span>':''}
+                </button>
+              `;
+            }).join('')
+        }
       </div>
-    `;
-  }).join('') || '<div class="empty">Add at least one standard in your ideal preferences first.</div>';
-}
+      }
 
 function setRating(id,value){
   draftRatings[id]=value;
@@ -518,15 +597,23 @@ function setRating(id,value){
 
 function updateLiveScore(){
   const total=state.standards.length;
-  const answered=state.standards.filter(s=>draftRatings[s.id]!==undefined&&draftRatings[s.id]!==null&&draftRatings[s.id]!=='').length;
+  const answered=state.standards.filter(s=>
+  draftRatings[s.id]!==undefined &&
+  draftRatings[s.id]!==null &&
+  draftRatings[s.id]!==''
+).length;
 
   let sum=0;
   let weightSum=0;
 
   state.standards.forEach(s=>{
     const weight=Number(s.weight)||1;
-    if(draftRatings[s.id]){
-      sum+=scoreFor(draftRatings[s.id],s.ideal)*weight;
+    if(
+      draftRatings[s.id]!==undefined &&
+      draftRatings[s.id]!==null &&
+      draftRatings[s.id]!==''
+    ){
+      sum+=scoreFor(draftRatings[s.id],s.ideal,s.type||'scale')*weight;
       weightSum+=weight;
     }
   });
@@ -560,7 +647,11 @@ function saveOption(){
     return;
   }
 
-  const missing=state.standards.filter(s=>!draftRatings[s.id]);
+  const missing=state.standards.filter(s=>
+  draftRatings[s.id]===undefined ||
+  draftRatings[s.id]===null ||
+  draftRatings[s.id]===''
+);
   if(missing.length){
     showToast(`Rate all ${missing.length} remaining standard(s) first.`);
     return;
@@ -738,15 +829,27 @@ function toggleDetails(id){
   host.innerHTML=`
     <div class="detail-grid">
       ${state.standards.map(s=>{
-        const rating=Number(c.ratings?.[s.id]||0);
-        const pct=rating?scoreFor(rating,s.ideal):0;
+      const rawRating=c.ratings?.[s.id];
+      const answered=rawRating!==undefined && rawRating!==null && rawRating!=='';
+      const rating=answered?Number(rawRating):null;
+      const pct=answered?scoreFor(rating,s.ideal,s.type||'scale'):0;
+      const answerLabel=s.type==='binary'
+        ? (rating===1?(s.labels[1]||'Yes'):(s.labels[0]||'No'))
+        : (answered?(s.labels[rating-1]||'Not rated'):'Not rated');
+      const idealLabel=s.type==='binary'
+        ? (Number(s.ideal)===1?(s.labels[1]||'Yes'):(s.labels[0]||'No'))
+        : (s.labels[s.ideal-1]||'');
 
         return `
           <div class="detail-card">
             <div class="eyebrow">${escapeHtml(s.name)}</div>
-            <div style="font-size:.82rem;margin-top:7px;color:var(--muted)">Your ideal: P${s.ideal} · ${escapeHtml(s.labels[s.ideal-1]||'')}</div>
+            <div style="font-size:.82rem;margin-top:7px;color:var(--muted)">
+              Your ideal: ${escapeHtml(idealLabel)}
+            </div>
             <div class="detail-score">${pct}% match</div>
-            <div style="font-size:.85rem">Country: P${rating} · ${escapeHtml(s.labels[rating-1]||'Not rated')}</div>
+            <div style="font-size:.85rem">
+              Country answer: ${answered?escapeHtml(answerLabel):'Not rated'}
+            </div>
             <div class="mini-meter" style="margin-top:9px"><span style="width:${pct}%"></span></div>
           </div>
         `;
