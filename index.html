@@ -479,38 +479,19 @@ function ipphFetchPublicData() {
   });
 }
   
+
 function ipphSubmitPublicContender(data) {
   return new Promise(function(resolve, reject) {
-    const frameName =
-      'ipphSubmitFrame_' + Date.now() + '_' +
+    const callbackName =
+      'ipphSubmissionCallback_' + Date.now() + '_' +
       Math.random().toString(36).slice(2);
 
-    const iframe = document.createElement('iframe');
-    iframe.name = frameName;
-    iframe.style.display = 'none';
-    iframe.setAttribute('aria-hidden', 'true');
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = IPPH_SUBMISSION_URL;
-    form.target = frameName;
-    form.style.display = 'none';
-
-    const payload = document.createElement('input');
-    payload.type = 'hidden';
-    payload.name = 'payload';
-    payload.value = JSON.stringify(data);
-
-    form.appendChild(payload);
-    document.body.appendChild(iframe);
-    document.body.appendChild(form);
-
+    const script = document.createElement('script');
     let finished = false;
 
     function cleanup() {
-      window.removeEventListener('message', onMessage);
-      form.remove();
-      iframe.remove();
+      delete window[callbackName];
+      script.remove();
     }
 
     const timeout = setTimeout(function() {
@@ -520,47 +501,43 @@ function ipphSubmitPublicContender(data) {
       reject(new Error(
         'The submission timed out. Check the leaderboard before trying again.'
       ));
-    }, 45000);
+    }, 60000);
 
-    function onMessage(event) {
-      if (event.source !== iframe.contentWindow) return;
-
-      const message = event.data;
-
-      if (
-        !message ||
-        message.type !== 'IPPH_SUBMISSION_RESULT' ||
-        !message.result
-      ) {
-        return;
-      }
-
+    window[callbackName] = function(result) {
       if (finished) return;
       finished = true;
       clearTimeout(timeout);
       cleanup();
 
-      if (message.result.ok === true) {
-        resolve(message.result);
+      if (result && result.ok === true) {
+        resolve(result);
       } else {
         reject(new Error(
-          message.result.error || 'The submission could not be saved.'
+          result && result.error
+            ? result.error
+            : 'The submission could not be saved.'
         ));
       }
-    }
+    };
 
-    window.addEventListener('message', onMessage);
+    script.onerror = function() {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      cleanup();
+      reject(new Error(
+        'Could not connect to the submission service.'
+      ));
+    };
 
-    try {
-      form.submit();
-    } catch (error) {
-      if (!finished) {
-        finished = true;
-        clearTimeout(timeout);
-        cleanup();
-        reject(new Error('Could not send the submission.'));
-      }
-    }
+    const payload = JSON.stringify(data);
+
+    script.src = IPPH_SUBMISSION_URL +
+      '?callback=' + encodeURIComponent(callbackName) +
+      '&payload=' + encodeURIComponent(payload) +
+      '&_=' + Date.now();
+
+    document.head.appendChild(script);
   });
 }
 
