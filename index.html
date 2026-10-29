@@ -1283,6 +1283,53 @@ function handleImport(event){
 }
 
 renderStandardsEditor();
+
+async function ipphLoadSharedGameData() {
+  try {
+    const data = await ipphFetchPublicData();
+
+    // Replace locally stored standards with the shared standards.
+    state.standards = data.standards.map(function(s) {
+      return {
+        id: s.id,
+        name: s.name,
+        question: s.question,
+        labels: s.labels,
+        ideal: s.ideal,
+        weight: s.weight,
+        type: s.type
+      };
+    });
+
+    // Public leaderboard data does not include private ratings.
+    state.countries = data.leaderboard.map(function(c, index) {
+      return {
+        id: 'public-' + index,
+        name: c.name,
+        tagline: c.tagline,
+        score: c.score,
+        ratings: {},
+        createdAt: '',
+        updatedAt: '',
+        lastStandards: []
+      };
+    });
+
+    // Refresh the leaderboard without navigating away from the current view.
+    if (typeof renderLeaderboard === 'function') {
+      renderLeaderboard();
+    }
+
+    console.log('IPPH shared data loaded successfully.');
+
+  } catch (error) {
+    console.error('IPPH shared data failed to load:', error);
+    showToast('Could not load shared data. Please refresh and try again.');
+  }
+}
+
+window.addEventListener('load', ipphLoadSharedGameData);
+
 </script>
 </body>
 </html>
