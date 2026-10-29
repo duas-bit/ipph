@@ -260,6 +260,17 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
   padding-top: 18px !important;
   border-top: 1px solid var(--line) !important;
 }
+  
+  /* Bring eyebrow closer to the header divider */
+.eyebrow {
+  margin-top: 0 !important;
+  margin-bottom: 24px !important;
+}
+
+/* Keep a little more breathing room before the hero headline */
+.hero h1 {
+  margin-top: 0 !important;
+}
 </style>
 </head>
 <body>
@@ -277,7 +288,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
         <div>
           <div class="eyebrow">✦ Who will be my Islamically Permissable Potential Husband? ✦</div>
           <h1>Find out<br>how you rank.</h1>
-          <p class="lede">This is the only time I'm allowed to be selfish in life, so enter the roster and see how you fare against my standards.</p>
+          <p class="lede">Test your worthiness, if you dare, and see how you fare against my standards.</p>
         </div>
       </div>
 
@@ -371,7 +382,7 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     </section>
 
     <section class="view" id="leaderboardView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">04 / SEE WHO WINS</span></div>
+      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">02 / SEE WHO'S WINNING</span></div>
       <div class="section-head"><div><div class="eyebrow">The current standings</div><h2>Country leaderboard.</h2><p>Ranked by compatibility with your current ideal preferences. Open any contender for the full breakdown.</p></div><button class="btn secondary small" onclick="exportData()">Export backup ↓</button></div>
       <div class="panel soft" id="leaderboardSummary"></div>
       <div class="panel"><div id="leaderboardList"></div></div>
@@ -474,38 +485,42 @@ function countryScore(country){
   return weightSum?Math.round(sum/weightSum):0;
 }
 
-function renderStandardsEditor(){
-  const host=document.getElementById('standardsEditor');
 
-  host.innerHTML=state.standards.map((s,i)=>`
-    <div class="panel" data-standard="${escapeHtml(s.id)}">
+function renderStandardsEditor(){
+  const host = document.getElementById('standardsEditor');
+
+  host.innerHTML = state.standards.map((s, i) => `
+    <div class="standard-card" data-standard="${escapeHtml(s.id)}">
+
       <div class="standard-top">
         <div>
-          <div class="standard-number">STANDARD ${String(i+1).padStart(2,'0')}</div>
+          <div class="standard-number">STANDARD ${String(i + 1).padStart(2, '0')}</div>
           <h3 style="margin:5px 0 0">Edit your standard</h3>
         </div>
         <button class="btn danger small" onclick="deleteStandard('${s.id}')">Remove</button>
       </div>
 
       <div class="form-grid" style="margin-top:16px">
-      <div class="field">
-        <label>Standard type</label>
-        <select data-field="type">
-          <option value="scale" ${(s.type||'scale')==='scale'?'selected':''}>5-point scale</option>
-          <option value="binary" ${s.type==='binary'?'selected':''}>Yes / No — non-negotiable</option>
-        </select>
-        <small>Use a scale for preferences and Yes / No for requirements that must be met.</small>
-      </div>
-      
-      <div class="form-grid">
+
+        <div class="field">
+          <label>Standard type</label>
+          <select data-field="type">
+            <option value="scale" ${(s.type || 'scale') === 'scale' ? 'selected' : ''}>5-point scale</option>
+            <option value="binary" ${s.type === 'binary' ? 'selected' : ''}>Yes / No — non-negotiable</option>
+          </select>
+          <small>Use a scale for preferences and Yes / No for requirements that must be met.</small>
+        </div>
+
         <div class="field">
           <label>Standard name</label>
           <input data-field="name" value="${escapeHtml(s.name)}" placeholder="e.g. Cost of living">
         </div>
+
         <div class="field">
           <label>Question / context (optional)</label>
-          <input data-field="question" value="${escapeHtml(s.question||'')}" placeholder="What are you evaluating?">
+          <input data-field="question" value="${escapeHtml(s.question || '')}" placeholder="What are you evaluating?">
         </div>
+
       </div>
 
       <div class="field">
@@ -513,103 +528,118 @@ function renderStandardsEditor(){
         <small>Point 1 is always on the left; point 5 is always on the right. Give every point its own meaning.</small>
       </div>
 
-      ${(s.type==='binary'?['No','Yes']:s.labels).map((label,j)=>`
+      ${(s.type === 'binary' ? ['No', 'Yes'] : s.labels).map((label, j) => `
         <div class="editor-point">
-          <div class="point-index">${s.type==='binary'?(j===0?'NO':'YES'):'P'+(j+1)}</div>
+          <div class="point-index">${s.type === 'binary' ? (j === 0 ? 'NO' : 'YES') : 'P' + (j + 1)}</div>
           <input
             data-label-index="${j}"
             value="${escapeHtml(label)}"
-            aria-label="${s.type==='binary'?(j===0?'No label':'Yes label'):'Label for point '+(j+1)}"
+            aria-label="${s.type === 'binary' ? (j === 0 ? 'No label' : 'Yes label') : 'Label for point ' + (j + 1)}"
           >
         </div>
       `).join('')}
 
       <div class="form-grid" style="margin-top:12px">
-      <div class="field">
-        <label>${s.type==='binary'?'Which answer fulfills this requirement?':'Which point is your ideal?'}</label>
-        <select data-field="ideal">
-          ${s.type==='binary'
-            ? `
-              <option value="1" ${Number(s.ideal)===1?'selected':''}>Yes — 100% fulfillment</option>
-              <option value="0" ${Number(s.ideal)===0?'selected':''}>No — 100% fulfillment</option>
-            `
-            : s.labels.map((label,j)=>`
-              <option value="${j+1}" ${Number(s.ideal)===j+1?'selected':''}>
-                Point ${j+1} — ${escapeHtml(label)}${Number(s.ideal)===j+1?' (100% ideal)':''}
-              </option>
-            `).join('')
-          }
-        </select>
-        <small>${s.type==='binary'
-          ?'The matching answer earns 100%; the opposite answer earns 0%.'
-          :'Your selected ideal point always scores 100% compatibility.'}</small>
-      </div>
+
+        <div class="field">
+          <label>${s.type === 'binary' ? 'Which answer fulfills this requirement?' : 'Which point is your ideal?'}</label>
+          <select data-field="ideal">
+            ${s.type === 'binary'
+              ? `
+                <option value="1" ${Number(s.ideal) === 1 ? 'selected' : ''}>Yes — 100% fulfillment</option>
+                <option value="0" ${Number(s.ideal) === 0 ? 'selected' : ''}>No — 100% fulfillment</option>
+              `
+              : s.labels.map((label, j) => `
+                <option value="${j + 1}" ${Number(s.ideal) === j + 1 ? 'selected' : ''}>
+                  Point ${j + 1} — ${escapeHtml(label)}${Number(s.ideal) === j + 1 ? ' (100% ideal)' : ''}
+                </option>
+              `).join('')
+            }
+          </select>
+          <small>${s.type === 'binary'
+            ? 'The matching answer earns 100%; the opposite answer earns 0%.'
+            : 'Your selected ideal point always scores 100% compatibility.'}</small>
+        </div>
 
         <div class="field">
           <label>Importance weight</label>
           <select data-field="weight">
-            <option value="1" ${Number(s.weight||1)===1?'selected':''}>1 · Standard importance</option>
-            <option value="2" ${Number(s.weight||1)===2?'selected':''}>2 · More important</option>
-            <option value="3" ${Number(s.weight||1)===3?'selected':''}>3 · Very important</option>
+            <option value="1" ${Number(s.weight || 1) === 1 ? 'selected' : ''}>1 · Standard importance</option>
+            <option value="2" ${Number(s.weight || 1) === 2 ? 'selected' : ''}>2 · More important</option>
+            <option value="3" ${Number(s.weight || 1) === 3 ? 'selected' : ''}>3 · Very important</option>
           </select>
           <small>Use a higher weight for standards that matter more to you.</small>
         </div>
+
       </div>
 
       <div class="btn-row">
-        <button class="btn secondary small" onclick="moveStandard('${s.id}',-1)" ${i===0?'disabled':''}>↑ Move up</button>
-        <button class="btn secondary small" onclick="moveStandard('${s.id}',1)" ${i===state.standards.length-1?'disabled':''}>↓ Move down</button>
+        <button class="btn secondary small" onclick="moveStandard('${s.id}', -1)" ${i === 0 ? 'disabled' : ''}>↑ Move up</button>
+        <button class="btn secondary small" onclick="moveStandard('${s.id}', 1)" ${i === state.standards.length - 1 ? 'disabled' : ''}>↓ Move down</button>
       </div>
+
     </div>
-  `).join('') || '<div class="empty"><div class="emoji">🧭</div><h3>No standards yet</h3>Add your first standard to start building your ideal.</div>';
+  `).join('') || `
+    <div class="empty">
+      <div class="emoji">🧭</div>
+      <h3>No standards yet</h3>
+      Add your first standard to start building your ideal.
+    </div>
+  `;
 
-  host.querySelectorAll('[data-standard]').forEach(card=>{
-    const id=card.dataset.standard;
+  host.querySelectorAll('[data-standard]').forEach(card => {
+    const id = card.dataset.standard;
 
-    card.querySelectorAll('[data-field]').forEach(input=>input.addEventListener('change',()=>{
-      const s=state.standards.find(x=>x.id===id);
-      if(!s)return;
+    card.querySelectorAll('[data-field]').forEach(input => {
+      input.addEventListener('change', () => {
+        const s = state.standards.find(x => x.id === id);
+        if (!s) return;
 
-      const key=input.dataset.field;
-      
-      if(key==='type'){
-        s.type=input.value;
-      
-        if(s.type==='binary'){
-          s.labels=['No','Yes'];
-          s.ideal=1;
-        }else{
-          s.labels=['Point 1','Point 2','Point 3','Point 4','Point 5'];
-          s.ideal=3;
+        const key = input.dataset.field;
+
+        if (key === 'type') {
+          s.type = input.value;
+
+          if (s.type === 'binary') {
+            s.labels = ['No', 'Yes'];
+            s.ideal = 1;
+          } else {
+            s.labels = ['Point 1', 'Point 2', 'Point 3', 'Point 4', 'Point 5'];
+            s.ideal = 3;
+          }
+
+          persist();
+          renderStandardsEditor();
+          return;
         }
-      
+
+        s[key] = key === 'ideal' || key === 'weight'
+          ? Number(input.value)
+          : input.value;
+
+        if (key === 'ideal') renderStandardsEditor();
+        else persist();
+      });
+    });
+
+    card.querySelectorAll('[data-label-index]').forEach(input => {
+      input.addEventListener('change', () => {
+        const s = state.standards.find(x => x.id === id);
+        if (!s) return;
+
+        const index = Number(input.dataset.labelIndex);
+
+        if (s.type === 'binary') {
+          s.labels = ['No', 'Yes'];
+          s.labels[index] = input.value.trim() || (index === 0 ? 'No' : 'Yes');
+        } else {
+          s.labels[index] = input.value.trim() || `Point ${index + 1}`;
+        }
+
         persist();
         renderStandardsEditor();
-        return;
-      }
-      
-      s[key]=key==='ideal'||key==='weight'?Number(input.value):input.value;
-      
-      if(key==='ideal')renderStandardsEditor();
-      else persist();
-    }));
-
-    card.querySelectorAll('[data-label-index]').forEach(input=>input.addEventListener('change',()=>{
-      const s=state.standards.find(x=>x.id===id);
-      if(!s)return;
-
-      const index=Number(input.dataset.labelIndex);
-      
-      if(s.type==='binary'){
-        s.labels=['No','Yes'];
-        s.labels[index]=input.value.trim()||(index===0?'No':'Yes');
-      }else{
-        s.labels[index]=input.value.trim()||`Point ${index+1}`;
-      }
-      
-      persist();
-      renderStandardsEditor();
-    }));
+      });
+    });
   });
 }
 
@@ -685,7 +715,7 @@ function startNewOption(){
 
   document.getElementById('countryName').value='';
   document.getElementById('countryTagline').value='';
-  document.getElementById('optionModeBadge').textContent='01 / ADD TO THE MAP';
+  document.getElementById('optionModeBadge').textContent='01 / ADD TO THE ROSTER';
   document.getElementById('optionHeading').textContent='Meet a contender.';
 
   renderCountryQuestions();
