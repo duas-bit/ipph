@@ -365,12 +365,12 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
       <div class="section-head"><div><div class="eyebrow">Welcome to the Game</div><h2 id="optionHeading">Become a contender.</h2><p>Choose one answer for every question. Answer truthfully.</p></div></div>
       <div class="panel">
         <div class="form-grid">
-          <div class="field"><label for="countryName">Your Name</label><input id="countryName" placeholder="e.g. Chlodwig" maxlength="90"></div>
+          <div class="field"><label for="countryName">Your Name</label><input id="countryName" placeholder="i.e. Chlodwig" maxlength="90"></div>
           <div class="field"><label for="countryTagline">Your Biggest Green Flag</label><input id="countryTagline" placeholder="i.e. has a routine bedtime" maxlength="180"></div>
         </div>
       </div>
       <div id="countryQuestions"></div>
-      <div class="score-banner"><div><div class="score-label">Projected compatibility</div><div class="score-number" id="liveScore">—%</div></div><div><div id="scoreCaption">Answer every standard to calculate your score.</div><div class="score-meter"><span id="scoreMeterFill"></span></div><div class="range-captions"><span>0% · Not aligned</span><span>100% · Your ideal</span></div></div></div>
+      <div class="score-banner"><div><div class="score-label">Projected compatibility</div><div class="score-number" id="liveScore">—%</div></div><div><div id="scoreCaption">Answer every standard to calculate the score.</div><div class="score-meter"><span id="scoreMeterFill"></span></div><div class="range-captions"><span>0% · Not aligned</span><span>100% · Ideal</span></div></div></div>
       <div class="btn-row"><button class="btn" id="saveOptionButton" onclick="saveOption()">Enter The Game ↗</button><button class="btn secondary" onclick="showView('homeView')">I Lied, I'm Not Worthy</button></div>
     </section>
 
@@ -382,13 +382,24 @@ footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);f
     </section>
 
     <section class="view" id="leaderboardView">
-      <div class="backline"><button class="link-btn" onclick="showView('homeView')">← Main Menu</button><span class="badge">02 / SEE WHO'S WINNING</span></div>
-      <div class="section-head"><div><div class="eyebrow">The current standings</div><h2>Country leaderboard.</h2><p>Ranked by compatibility with your current ideal preferences. Open any contender for the full breakdown.</p></div><button class="btn secondary small" onclick="exportData()">Export backup ↓</button></div>
+      <div class="backline">
+        <button class="link-btn" onclick="showView('homeView')">← Home</button>
+        <span class="badge">02 / SEE WHO'S WINNING</span>
+      </div>
+      
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Contender Leaderboard</div>
+          <h2>The current standings.</h2>
+          <p>Ranked by compatibility with Dua's ideal preferences.</p>
+        </div>
+      </div>
+      
       <div class="panel soft" id="leaderboardSummary"></div>
-      <div class="panel"><div id="leaderboardList"></div></div>
-      <div class="btn-row"><button class="btn secondary" onclick="importData()">Import backup ↑</button><button class="btn ghost" onclick="showView('preferencesView')">Adjust rubric</button></div>
-      <input id="importFile" type="file" accept=".json,application/json" hidden onchange="handleImport(event)">
-      <div class="notice" style="margin-top:18px">Prototype storage note: this first build saves to this browser only. Use Export backup to keep a copy. Google Sheets syncing and secure private access are the next setup stage; a public GitHub Pages page alone cannot securely hide a leaderboard.</div>
+      
+      <div class="panel">
+        <div id="leaderboardList"></div>
+      </div>
     </section>
   </main>
 
@@ -401,9 +412,9 @@ const STORAGE_KEY = 'whereToCountryQuest_v1';
 
 const defaultState = {
   standards: [
-    {id:'s1',name:'Quality of life',question:'How would you describe everyday life and overall wellbeing?',labels:['Very poor','Poor','Average','Good','Excellent'],ideal:5,weight:1},
-    {id:'s2',name:'Tax burden',question:'How appealing is the overall tax burden for your ideal life?',labels:['Very low','Low','Moderate','High','Very high'],ideal:1,weight:1},
-    {id:'s3',name:'Healthcare',question:'How well does the healthcare system match what you want?',labels:['Very poor','Poor','Average','Good','Excellent'],ideal:5,weight:1}
+    {id:'s1',name:'Input Standard Here',question:'Input a question here?',labels:['Very poor','Poor','Average','Good','Excellent'],ideal:5,weight:1},
+    {id:'s2',name:'Input Standard Here',question:'Input a question here?',labels:['Very low','Low','Moderate','High','Very high'],ideal:5,weight:1},
+    {id:'s3',name:'Input Standard Here',question:'Input a question here?',labels:['Very poor','Poor','Average','Good','Excellent'],ideal:5,weight:1}
   ],
   countries: [],
   history: []
@@ -1026,23 +1037,30 @@ function renderLeaderboard(){
     .map(c=>({...c,computedScore:countryScore(c)}))
     .sort((a,b)=>b.computedScore-a.computedScore||a.name.localeCompare(b.name));
 
+  const averageCompatibility=ranked.length
+    ?Math.round(
+        ranked.reduce((total,c)=>total+c.computedScore,0)/ranked.length
+      )
+    :null;
+
   summary.innerHTML=`
     <div class="form-grid">
       <div>
-        <div class="eyebrow">YOUR CONTENDERS</div>
+        <div class="eyebrow">TOTAL CONTENDERS</div>
         <div class="score-number" style="font-size:2.5rem;margin-top:8px">${ranked.length}</div>
-        <div style="color:var(--muted);font-size:.85rem">countries evaluated</div>
+        <div style="color:var(--muted);font-size:.85rem">contenders submitted</div>
       </div>
+
       <div>
-        <div class="eyebrow">RUBRIC STANDARDS</div>
-        <div class="score-number" style="font-size:2.5rem;margin-top:8px">${state.standards.length}</div>
-        <div style="color:var(--muted);font-size:.85rem">standards in your ideal</div>
+        <div class="eyebrow">AVERAGE COMPATIBILITY</div>
+        <div class="score-number" style="font-size:2.5rem;margin-top:8px">${averageCompatibility===null?'—':averageCompatibility+'%'}</div>
+        <div style="color:var(--muted);font-size:.85rem">across all contenders</div>
       </div>
     </div>
   `;
 
   if(!ranked.length){
-    list.innerHTML='<div class="empty"><div class="emoji">🏁</div><h3>Your leaderboard is waiting.</h3>Weigh your first country to start the race.</div>';
+    list.innerHTML='<div class="empty"><div class="emoji">🏁</div><h3>The leaderboard is empty.</h3>add the first contender to get the rankings started.</div>';
     return;
   }
 
@@ -1051,12 +1069,16 @@ function renderLeaderboard(){
       <div class="result-main">
         <div class="result-rank">${String(i+1).padStart(2,'0')}</div>
         <div>
-          <h3 style="margin:0 0 4px">${escapeHtml(c.name)} ${i===0?'<span class="badge rank">✦ CURRENT LEADER</span>':''}</h3>
-          <div style="font-size:.85rem;color:var(--muted)">${escapeHtml(c.tagline||'No note added')}</div>
-          <button class="link-btn" onclick="toggleDetails('${c.id}')">View detailed results ↗</button>
-          <div id="details-${c.id}" hidden></div>
+          <h3 style="margin:0 0 4px">
+            ${escapeHtml(c.name)}
+            ${i===0?'<span class="badge rank">✦ TOP CONTENDER</span>':''}
+          </h3>
+          <div style="font-size:.85rem;color:var(--muted)">
+            ${escapeHtml(c.tagline||'No note added')}
+          </div>
         </div>
       </div>
+
       <div class="result-percent">${c.computedScore}%</div>
     </div>
   `).join('');
