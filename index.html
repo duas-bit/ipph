@@ -1154,7 +1154,7 @@ function renderEditList(){
       <div class="option-row">
         <div>
           <h3>${escapeHtml(c.name)} <span class="badge">${countryScore(c)}% match</span></h3>
-          <p>${escapeHtml(c.tagline||'No note added')} · Updated ${new Date(c.updatedAt||c.createdAt).toLocaleDateString()}</p>
+          <p>${escapeHtml(c.tagline || 'No note added')}</p>
           <div id="history-${c.id}"></div>
         </div>
 
@@ -1307,26 +1307,43 @@ function toggleDetails(id){
   `;
 }
 
-function showHistory(id){
-  const host=document.getElementById('history-'+id);
-  if(!host)return;
+function showHistory(id) {
+  const host = document.getElementById('history-' + id);
+  if (!host) return;
 
-  const items=state.history
-    .filter(h=>h.countryId===id)
-    .sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));
+  const items = state.history
+    .filter(h => h.countryId === id)
+    .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
 
-  host.innerHTML=items.length
-    ?`<div class="panel soft" style="margin-top:12px">
+  host.innerHTML = items.length
+    ? `<div class="panel soft" style="margin-top:12px">
         <h3>Saved score history</h3>
-        ${items.map(h=>`
+        ${items.map(h => `
           <div class="history-item">
-            <strong>${escapeHtml(h.reason||'Saved revision')}</strong> · ${escapeHtml(h.countryName)} · ${h.score}%
+            <strong>${escapeHtml(h.reason || 'Saved revision')}</strong>
+            · ${escapeHtml(h.countryName || '')}
             <br>
-            <span style="color:var(--muted)">${h.savedAt?new Date(h.savedAt).toLocaleString():'Date unavailable'}</span>
+            <span>
+              ${h.scoreBefore !== '' && h.scoreBefore !== null
+                ? 'Before: ' + escapeHtml(h.scoreBefore) + '%'
+                : ''}
+              ${h.scoreAfter !== '' && h.scoreAfter !== null
+                ? ' → After: ' + escapeHtml(h.scoreAfter) + '%'
+                : ''}
+            </span>
+            ${h.notes
+              ? `<br><span style="color:var(--muted)">${escapeHtml(h.notes)}</span>`
+              : ''}
+            <br>
+            <span style="color:var(--muted)">
+              ${h.savedAt
+                ? new Date(h.savedAt).toLocaleString()
+                : 'Date unavailable'}
+            </span>
           </div>
         `).join('')}
       </div>`
-    :'<div class="notice" style="margin-top:12px">No previous revisions have been saved for this contender yet. History is created when you edit or delete a contender, or when its score changes after a rubric update.</div>';
+    : '<div class="notice" style="margin-top:12px">No saved history is available for this contender.</div>';
 }
 
 function exportData(){
@@ -1385,7 +1402,6 @@ async function ipphLoadSharedGameData() {
   try {
     const data = await ipphFetchPublicData();
 
-    // Replace locally stored standards with the shared standards.
     state.standards = data.standards.map(function(s) {
       return {
         id: s.id,
@@ -1398,21 +1414,45 @@ async function ipphLoadSharedGameData() {
       };
     });
 
-    // Public leaderboard data does not include private ratings.
-    state.countries = data.leaderboard.map(function(c, index) {
+    // Build a ratings object for each real contender ID.
+    const ratingsByOption = {};
+
+    (data.ratings || []).forEach(function(r) {
+      if (!ratingsByOption[r.optionId]) {
+        ratingsByOption[r.optionId] = {};
+      }
+
+      ratingsByOption[r.optionId][r.standardId] = r.value;
+    });
+
+    // Use actual IDs and saved answers from the database.
+    state.countries = data.leaderboard.map(function(c) {
       return {
-        id: 'public-' + index,
+        id: c.id,
         name: c.name,
         tagline: c.tagline,
         score: c.score,
-        ratings: {},
-        createdAt: '',
-        updatedAt: '',
+        ratings: ratingsByOption[c.id] || {},
+        createdAt: c.createdAt || '',
+        updatedAt: c.updatedAt || '',
         lastStandards: []
       };
     });
 
-    // Refresh the leaderboard without navigating away from the current view.
+    // Convert database history into the format used by the history view.
+    state.history = (data.history || []).map(function(h) {
+      return {
+        countryId: h.optionId,
+        countryName: h.optionName,
+        eventType: h.eventType,
+        scoreBefore: h.scoreBefore,
+        scoreAfter: h.scoreAfter,
+        savedAt: h.timestamp,
+        reason: h.eventType,
+        notes: h.notes
+      };
+    });
+
     if (typeof renderLeaderboard === 'function') {
       renderLeaderboard();
     }
