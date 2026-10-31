@@ -139,7 +139,7 @@ input[type=range]{width:100%;accent-color:var(--brown);cursor:grab}
 .editor-point .point-index{font:500 .75rem 'Courier New',monospace;color:var(--muted);text-align:center}
 .editor-point input{border:1.5px solid var(--line);background:var(--white);border-radius:8px;padding:9px;width:100%}
 footer{border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);font:400 .7rem 'Courier New',monospace;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--white);padding:12px 16px;border-radius:10px;z-index:10;box-shadow:4px 4px 0 var(--taupe);transition:.2s;font-size:.9rem;max-width:calc(100% - 32px)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--white);padding:12px 16px;border-radius:10px;z-index:10;box-shadow:4px 4px 0 var(--taupe);transition:.2s;font-size:.9rem;max-width:calc(100% - 32px);white-space:pre-line}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:760px){
   .hero{grid-template-columns:1fr;padding-top:28px}
@@ -585,12 +585,16 @@ function escapeHtml(s=''){
   return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function showToast(message){
+function showToast(message, duration = 2600){
   const el=document.getElementById('toast');
   el.textContent=message;
   el.classList.add('show');
+
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+
+  if(duration > 0){
+    toastTimer=setTimeout(()=>el.classList.remove('show'),duration);
+  }
 }
 
 function showView(id){
@@ -1043,18 +1047,18 @@ async function saveOption() {
   const tagline = document.getElementById('countryTagline').value.trim();
 
   if (!name) {
-    showToast('Give this country a name first.');
+    showToast('Give this contender a name first.');
     document.getElementById('countryName').focus();
     return;
   }
 
   if (name.length > 90) {
-    showToast('Country names must be 90 characters or fewer.');
+    showToast('Contender names must be 90 characters or fewer.');
     return;
   }
 
   if (!tagline) {
-    showToast('Give this country a tagline first.');
+    showToast('Give this contender a tagline first.');
     document.getElementById('countryTagline').focus();
     return;
   }
@@ -1084,7 +1088,7 @@ async function saveOption() {
       return c.name.toLowerCase() === name.toLowerCase();
     })
   ) {
-    showToast('That country already exists. Choose a different name.');
+    showToast('That contender already exists. Choose a different name.');
     return;
   }
 
@@ -1102,7 +1106,10 @@ async function saveOption() {
     submitButton.disabled = true;
   }
 
-  showToast('Submitting your contender…');
+  showToast(
+    'Submitting your contender…\nPlease don’t close, refresh, or click anything else.',
+    0
+  );
 
   try {
     const result = await ipphSubmitPublicContender({
