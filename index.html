@@ -855,7 +855,15 @@ function savePreferences(){
   showView('homeView');
 }
 
-function startNewOption(){
+async function startNewOption(){
+  showToast('Loading the latest standards…', 0);
+
+  const loaded = await ipphLoadSharedGameData();
+
+  if (!loaded) {
+    return;
+  }
+
   currentMode='new';
   editingId=null;
   draftRatings={};
@@ -869,6 +877,8 @@ function startNewOption(){
   renderCountryQuestions();
   updateLiveScore();
   showView('optionView');
+
+  showToast('Latest standards loaded.');
 }
 
 function startEditOption(id){
@@ -1465,11 +1475,13 @@ async function ipphLoadSharedGameData() {
     }
 
     console.log('IPPH shared data loaded successfully.');
+    return true;
 
-  } catch (error) {
-    console.error('IPPH shared data failed to load:', error);
-    showToast('Could not load shared data. Please refresh and try again.');
-  }
+    } catch (error) {
+      console.error('IPPH shared data failed to load:', error);
+      showToast('Could not load shared data. Please refresh and try again.');
+      return false;
+    }
 }
 
 window.addEventListener('load', ipphLoadSharedGameData);
